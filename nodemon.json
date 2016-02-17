@@ -1,0 +1,8 @@
+{
+  "verbose": true,
+  "watch": ["app", "bin" ],
+  "env" : {
+      "DEBUG" : "PskReplicant:*",
+      "NODE_ENV": "development"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "deps": [
+  { "name": "fauxton" },
+  { "name": "components" },
+  { "name": "databases" },
+  { "name": "documents" },
+  { "name": "activetasks" },
+  { "name": "cluster" },
+  { "name": "config" },
+  { "name": "replication" },
+  { "name": "cors" },
+  { "name": "permissions" },
+  { "name": "compaction" },
+  { "name": "auth" },
+  { "name": "verifyinstall" }
+  ],
+    "template": {
+      "development": {
+        "app": {
+          "root": "/db/_utils/",
+          "host": "/db",
+          "version": "1.0.dev",
+          "zeroClipboardPath": "js/zeroclipboard/ZeroClipboard.swf"
+        }
+      },
+      "release": {
+        "app": {
+          "root": "/db/_utils/",
+          "host": "/db",
+          "version": "1.0",
+          "zeroClipboardPath": "js/zeroclipboard/ZeroClipboard.swf"
+        }
+      }
+    }
+}
