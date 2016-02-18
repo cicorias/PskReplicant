@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+'use strict';
+
 /**
  * Module dependencies.
  */
@@ -8,6 +10,9 @@ var client = require('../app/client');
 
 var debug = require('debug')('PskReplicant:server');
 var http = require('http');
+var tls = require('tls');
+var fs = require('fs');
+
 
 /**
  * Get port from environment and  store in Express.
@@ -16,9 +21,61 @@ var http = require('http');
 var port = normalizePort(process.env.PORT || '3000');
 app.set('port', port);
 
+//PSK stuff
 
-client.set('port', port + 1);
-client.listen(port + 1);
+function filenamePEM(n) {
+  return require('path').join( './', n + '.pem');
+}
+
+function loadPEM(n) {
+  return fs.readFileSync(filenamePEM(n));
+}
+
+
+var pskey = "d731ef57be09e5204f0b205b60627028";
+var identity = 'TestUser';
+
+var PSKCiphers = 'PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA:PSK-RC4-SHA';
+
+  function serverCallback(id) {
+    console.log('in server callback');
+    if (id == identity) {
+      return new Buffer(pskey, 'hex');
+    }
+    return null;
+  }
+  
+
+var serverOptions = {
+  // configure a mixed set of cert and PSK ciphers - NOT RC4-SHA:AES128-SHA:AES256-SHA:
+  ciphers: 'PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA',
+  pskCallback: function(id){
+    debug('inside the callback');
+    if (id == identity) {
+      return new Buffer(pskey, 'hex');
+    }
+    return null;
+  },
+  key: loadPEM('agent2-key'),
+  cert: loadPEM('agent2-cert')
+  //SNICallback: function (servername, cb) {
+    
+  //  return true;
+  //}
+};
+
+var pouchServer = tls.createServer(serverOptions, function(c){
+    debug('tls create server');
+    console.log('%s connected', c.pskIdentity);
+    console.log(c.pskIdentity + ' ' + (c.authorized ? 'authorized' : 'not authorized'));
+
+});
+console.log('tls listening on %s', port + 1);
+pouchServer.listen(port + 1);
+
+
+// client.set('port', port + 1);
+// client.listen(port + 1);
 //client.listen(port +1);
 
 /**
