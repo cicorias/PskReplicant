@@ -1,8 +1,11 @@
 {
   "verbose": true,
-  "watch": ["app", "bin" ],
+  "execMap": {
+      "js": "node"
+  },
+  "watch": ["app/", "bin/" ],
   "env" : {
-      "DEBUG" : "PskReplicant:*",
-      "NODE_ENV": "development"
+      "NODE_ENV": "development",
+      "NODE_DEBUG": "tls,crypto"
   }
 }
