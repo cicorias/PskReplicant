@@ -6,7 +6,8 @@
     "start": "node ./bin/www",
     "debug": "SET DEBUG=PskReplicant:* & npm start",
     "nm": "SET DEBUG=PskReplicant:* & nodemon ./client.js",
-    "nmall": "SET DEBUG=*:* & nodemon ./client.js"
+    "nmall": "SET DEBUG=PskReplicant:* & nodemon ./bin/www",
+    "jx": "SET DEBUG=PskReplicant:* & jx ./bin/www"
   },
   "dependencies": {
     "body-parser": "~1.13.2",

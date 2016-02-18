@@ -36,3 +36,4 @@ db/*
 foobar/*
 foobarrepl/*
 pouch__all_dbs__/*
+pouch__auth_sessions__/*

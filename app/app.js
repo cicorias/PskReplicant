@@ -1,3 +1,5 @@
+'use strict';
+
 var express = require('express');
 var path = require('path');
 var favicon = require('serve-favicon');
@@ -28,9 +30,9 @@ app.use('/users', users);
 
 app.use('/replicate', replicate);
 
-// pouchdb-express setup
-var PouchDB = require('pouchdb');
-app.use('/db', require('express-pouchdb')(PouchDB));
+// // pouchdb-express setup
+// var PouchDB = require('pouchdb');
+// app.use('/db', require('express-pouchdb')(PouchDB));
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {

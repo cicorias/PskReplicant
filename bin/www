@@ -2,152 +2,182 @@
 
 'use strict';
 
-/**
- * Module dependencies.
- */
-var app = require('../app/app');
-var client = require('../app/client');
 
 var debug = require('debug')('PskReplicant:server');
+var https = require('https');
+
 var http = require('http');
+
 var tls = require('tls');
 var fs = require('fs');
 
+//var PouchDB = require('pouchdb');
+//app.use('/db', require('express-pouchdb')(PouchDB));
 
+//HACK
+// https.globalAgent.options.ca = '';/*something*/
+// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
+// the 2 express apps:
+var webApp = require('../app/app');
+var pouchWeb = require('../app/client');
+
+var pouchServerApp = require('../app/client');
+
+// pouchWeb.use('/db', require('express-pouchdb')(PouchDB));
+// pouchServerApp.use('/db', require('express-pouchdb')(PouchDB));
+
+// base port to use...
+var webAppPort = normalizePort(process.env.PORT || '3000');
+var pouchWebPort = normalizePort(process.env.PORT || '3002');
+
+var pouchAppPort = normalizePort("3001");
+
+// cert/pem loaders
+function filenamePEM(n) {
+    return require('path').join('./', n + '.pem');
+}
+
+function loadPEM(n) {
+    return fs.readFileSync(filenamePEM(n));
+}
+
+
+//PSK stuff
+// var pskey = "d731ef57be09e5204f0b205b60627028";
+var pskey = new Buffer('d731ef57be09e5204f0b205b60627028');
+var identity = 'TestUser';
+
+
+//var PSKCiphers = 'PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA:PSK-RC4-SHA';
+
+function serverCallback(id) {
+    debug('in server callback');
+    debug('identity %', id);
+    debug('key %s', pskey);
+    if (id == identity) {
+        return pskey;
+    }
+    return null;
+}
+
+var serverCommonOptions = {
+    key: loadPEM('key'),
+    cert: loadPEM('key-cert')
+};
+
+
+var serverOptions = {
+    ciphers : 'PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA',
+    pskCallback : function (id) {
+        debug('inside the callback for identity: %s', id);
+        debug('identity %s', id);
+        debug('key %s', JSON.stringify(pskey));
+        if (id == identity) {
+            debug('identity passed');
+            return pskey;
+        }
+        return null;
+    },
+    key: loadPEM('key'),
+    cert: loadPEM('key-cert'),
+    ca: loadPEM('key')
+}
+
+pouchServerApp.set('port', pouchAppPort);
+
+//TODO:need to see if 'tls' works. see: https://github.com/expressjs/express/issues/2528
+//also: http://blog.vanamco.com/proxy-requests-in-node-js/ 
+
+var pouchServer = https.createServer(serverOptions, pouchServerApp);
+
+
+// var pouchServer = tls.createServer(serverOptions, function(c){
+//     console.log('%s connected', c.pskIdentity);
+// });//pouchServerApp);
+
+// turns our that request.url is undefined when using tls direct
+
+// var pouchServer = https.createServer(serverOptions, pouchServerApp);
+
+
+pouchServer.listen(pouchAppPort, function () {
+    debug('pouchServer is listening on port %s', pouchAppPort);
+});
+pouchServer.on('error', onError);
+
+
+///THIS IS Fauxton UI
+
+pouchWeb.set('port', pouchWebPort);
+var pouchWebServer = http.createServer(pouchWeb);
+pouchWeb.listen(pouchWebPort, function(){
+    debug('Pouch UI web listening on port %s', pouchWebPort);
+})
+pouchWeb.on('error', onError);
+
+
+
+
+
+///THSI IS OUR SIMPLE UI
 /**
  * Get port from environment and  store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
-
-//PSK stuff
-
-function filenamePEM(n) {
-  return require('path').join( './', n + '.pem');
-}
-
-function loadPEM(n) {
-  return fs.readFileSync(filenamePEM(n));
-}
-
-
-var pskey = "d731ef57be09e5204f0b205b60627028";
-var identity = 'TestUser';
-
-var PSKCiphers = 'PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA:PSK-RC4-SHA';
-
-  function serverCallback(id) {
-    console.log('in server callback');
-    if (id == identity) {
-      return new Buffer(pskey, 'hex');
-    }
-    return null;
-  }
-  
-
-var serverOptions = {
-  // configure a mixed set of cert and PSK ciphers - NOT RC4-SHA:AES128-SHA:AES256-SHA:
-  ciphers: 'PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA',
-  pskCallback: function(id){
-    debug('inside the callback');
-    if (id == identity) {
-      return new Buffer(pskey, 'hex');
-    }
-    return null;
-  },
-  key: loadPEM('agent2-key'),
-  cert: loadPEM('agent2-cert')
-  //SNICallback: function (servername, cb) {
-    
-  //  return true;
-  //}
-};
-
-var pouchServer = tls.createServer(serverOptions, function(c){
-    debug('tls create server');
-    console.log('%s connected', c.pskIdentity);
-    console.log(c.pskIdentity + ' ' + (c.authorized ? 'authorized' : 'not authorized'));
-
+webApp.set('port', webAppPort);
+var webServer = https.createServer(serverCommonOptions, webApp);
+webServer.listen(webAppPort, function () {
+    debug('webServer is listening on port %s', webAppPort);
 });
-console.log('tls listening on %s', port + 1);
-pouchServer.listen(port + 1);
-
-
-// client.set('port', port + 1);
-// client.listen(port + 1);
-//client.listen(port +1);
-
-/**
- * Create HTTP server.
- */
-
-var server = http.createServer(app);
-
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
+webServer.on('error', onError);
 
 /**
  * Normalize a port into a number, string, or false.
  */
 
 function normalizePort(val) {
-  var port = parseInt(val, 10);
+    var port = parseInt(val, 10);
 
-  if (isNaN(port)) {
-    // named pipe
-    return val;
-  }
+    if (isNaN(port)) {
+        // named pipe
+        return val;
+    }
 
-  if (port >= 0) {
-    // port number
-    return port;
-  }
+    if (port >= 0) {
+        // port number
+        return port;
+    }
 
-  return false;
+    return false;
 }
 
 /**
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
-  if (error.syscall !== 'listen') {
-    throw error;
-  }
+function onError(error, parent) {
+    if (error.syscall !== 'listen') {
+        throw error;
+    }
 
-  var bind = typeof port === 'string'
-    ? 'Pipe ' + port
-    : 'Port ' + port;
+    var bind = typeof port === 'string'
+        ? 'Pipe ' + port
+        : 'Port ' + port;
 
-  // handle specific listen errors with friendly messages
-  switch (error.code) {
-    case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
-      process.exit(1);
-      break;
-    case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
-      process.exit(1);
-      break;
-    default:
-      throw error;
-  }
+    // handle specific listen errors with friendly messages
+    switch (error.code) {
+        case 'EACCES':
+            console.error(bind + ' requires elevated privileges');
+            process.exit(1);
+            break;
+        case 'EADDRINUSE':
+            console.error(bind + ' is already in use');
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
 
-function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-}

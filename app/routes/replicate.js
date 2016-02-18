@@ -1,8 +1,13 @@
 var express = require('express');
 var router = express.Router();
 var debug = require('debug')('PskReplicant:replicate');
+var https = require('https');
 
 var PouchDB = require('pouchdb');
+
+// WARNING THIS NEEDS TO GO AWAY:::
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
@@ -10,11 +15,60 @@ router.get('/', function (req, res, next) {
 });
 
 
+//PSK stuff
+var pskey = new Buffer('d731ef57be09e5204f0b205b60627028');
+var identity = 'TestUser';
+var pskCiphers = 'PSK-AES128-CBC-SHA:PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA';
+// var pskCiphers = 'AES128-SHA:AES256-SHA:PSK-AES256-CBC-SHA:PSK-3DES-EDE-CBC-SHA:PSK-AES128-CBC-SHA';
+
+
+    function clientCallback(hint) {
+        debug('inside the client callback');
+        
+        var rv = { identity: identity, key : new Buffer(pskey, 'hex')}
+        debug(JSON.stringify(rv));
+        
+        //if (hint == sharedHint) {
+            return rv;
+        //}
+        //return null;
+    }
+
+
 router.post('/', function (req, res, next) {
+    
     debug('posted request');
     var PouchDB = require('pouchdb');
     var localDB = new PouchDB('foobar')
-    var remoteDB = new PouchDB('http://localhost:3001/foobarrepl')
+// 
+//     var ajaxOptions = { ajax : {
+//         agentOptions:{
+//             rejectUnauthorized: false,
+//             pskClientCallback : clientCallback,
+//             ciphers: pskCiphers,
+//             pskIdentity: identity,
+//             pskKey : pskey
+//         },
+//             rejectUnauthorized: false,
+//             pskClientCallback : clientCallback,
+//             ciphers: pskCiphers,
+//             pskIdentity: identity,
+//             pskKey : pskey
+//             
+//     }};
+//     
+   
+    var ajaxOptions = { ajax : {
+        agentOptions:{
+            rejectUnauthorized: false,
+            pskClientCallback : clientCallback,
+            ciphers: pskCiphers,
+            pskIdentity: identity,
+            pskKey : pskey
+        }            
+    }};
+    
+    var remoteDB = new PouchDB('https://localhost:3001/foobarrepl', ajaxOptions)
 
 
     localDB.replicate.to(remoteDB).on('complete', function () {
@@ -33,8 +87,6 @@ router.post('/', function (req, res, next) {
 
 router.post('/add', function (req, res, next) {
     debug('adding a new record...');
-
-
     var db = new PouchDB('foobar');
     var doc = {
         "_id": guid(),
@@ -49,6 +101,7 @@ router.post('/add', function (req, res, next) {
     };
 
     db.put(doc);
+    debug('done a new record...');
 
     res.render('replicate', { title: 'Replicate' });
 })
