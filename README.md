@@ -67,3 +67,8 @@ export DEBUG=PskReplicant:*; export NODE_DEBUG=tls; {PATH_TO_JX.exe}\jx .\bin\ww
 ## Running site:
 Main Page: ![](https://farm2.staticflickr.com/1485/24763488099_9ba73f247b_b.jpg)
 Fauxton Page: ![](https://farm2.staticflickr.com/1471/24504349913_e124b6cbb3_b.jpg)
+
+### Debug messages after adding - then replication
+Below is an example running that shows the debug messages - note the multiple calls that occur when PouchDB client makes multiple calls during replication - and each is validated on both server/client side.
+
+Debug Messages: ![](https://farm2.staticflickr.com/1582/24506585163_2a0be750bc_b.jpg)
