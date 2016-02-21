@@ -28,7 +28,7 @@ router.post('/', function (req, res, next) {
     var PouchDB = require('pouchdb');
     var localDB = new PouchDB('foobar')
 
-    var ajaxOptions = { ajax : {
+    var pouchDbOptions = { ajax : {
         agentOptions:{
             rejectUnauthorized: false,
             pskClientCallback : clientCallback,
@@ -38,7 +38,18 @@ router.post('/', function (req, res, next) {
         }            
     }};
     
-    var remoteDB = new PouchDB('https://localhost:3001/foobarrepl', ajaxOptions)
+    // an alt option is supply identity/key
+    var pouchDbOptions_alt = { ajax : {
+        agentOptions:{
+            rejectUnauthorized: false,
+            pskClientCallback : clientCallback,
+            ciphers: pskCiphers,
+            pskIdentity: identity,
+            pskKey : pskey
+        }            
+    }};
+    
+    var remoteDB = new PouchDB('https://localhost:3001/foobarrepl', pouchDbOptions)
 
     localDB.replicate.to(remoteDB).on('complete', function () {
         debug('done replication');

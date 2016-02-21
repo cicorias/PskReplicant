@@ -20,6 +20,19 @@ cd .\PskReplicant
 
 ```
 
+### Alternatively use npm
+
+you can also run via NPM a script.
+```
+REM windows
+npm run jx
+```
+or on Linux/OSX
+```
+npm run jx2
+```
+
+
 ## Running solution
 
 This launches a single process that will host 3 HTTPS/TLS listeners.
@@ -33,8 +46,8 @@ D:\g\thali\PskReplicant [master]> D:\g\jxcore-m\Release\jx .\bin\www
 - [ ] Launch the site by going to [https://localhost:3000/replicate](https://localhost:3000/replicate)
 - [ ] Open another tab to see Fauxton's interface [http://localhost:3002/_utils/](http://localhost:3002/_utils/)
 ** NOTE: ** 1st URL is `https` and the 2nd is `http`
-- [ ] Create a PouchDB called `foobar`
-- [ ] Create another PouchDB called `foobarrepl'
+- [ ] Create a PouchDB called `foobar` (not necessary - as PouchDB creates automatically)
+- [ ] Create another PouchDB called `foobarrepl' (not necessary - as PouchDB creates automatically)
 - [ ] On the main page - create some documents via the 2nd button (see image labeled poorly 'step 1')
 - [ ] On the main page - initiate an on demand replication with 1st button (see image labeled poorly 'step 2')
 

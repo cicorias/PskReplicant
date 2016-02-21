@@ -1,13 +1,12 @@
 {
-  "name": "PskReplicant",
-  "version": "0.1.0",
+  "name": "pskreplicant",
+  "version": "0.2.0",
   "private": true,
+  "author": "Shawn Cicoria",
   "scripts": {
-    "start": "node ./bin/www",
-    "debug": "SET DEBUG=PskReplicant:* & npm start",
-    "nm": "SET DEBUG=PskReplicant:* & nodemon ./client.js",
-    "nmall": "SET DEBUG=PskReplicant:* & nodemon ./bin/www",
-    "jx": "SET DEBUG=PskReplicant:* & jx ./bin/www"
+    "start": "jx ./bin/www",
+    "jx": "SET DEBUG=PskReplicant:* & jx ./bin/www",
+    "jx2" : "DEBUG=PskReplicant:* jx ./bin/www"
   },
   "dependencies": {
     "body-parser": "~1.13.2",
